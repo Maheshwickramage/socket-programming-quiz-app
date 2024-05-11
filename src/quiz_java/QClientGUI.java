@@ -22,8 +22,8 @@ public class QClientGUI {
 
  public QClientGUI() {
      frame = new JFrame("Question Client");
-     questionArea = new JTextArea(5, 50);
-     questionArea.setEditable(false);
+     questionArea = new JTextArea(50, 50);
+     questionArea.setEditable(true);
      JScrollPane questionScrollPane = new JScrollPane(questionArea);
      answerField = new JTextField(50);
      submitButton = new JButton("Submit Answer");
@@ -54,31 +54,37 @@ public class QClientGUI {
      });
  }
 
- public void connectToServer() {
-     try {
-         Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-         out = new PrintWriter(socket.getOutputStream(), true);
-         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+ // Modify the connectToServer method
+//Modify the connectToServer method
+public void connectToServer() {
+  try {
+      Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+      out = new PrintWriter(socket.getOutputStream(), true);
+      in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-         new Thread(() -> {
-             try {
-                 String fromServer;
-                 while ((fromServer = in.readLine()) != null) {
-                     if ("END".equals(fromServer)) {
-                         questionArea.append("Quiz finished. Thank you for participating!\n");
-                         break;
-                     }
-                     questionArea.append("Server asks: " + fromServer + "\n");
-                 }
-             } catch (IOException ex) {
-                 ex.printStackTrace();
-             }
-         }).start();
-     } catch (IOException ex) {
-         ex.printStackTrace();
-     }
- }
-
+      new Thread(() -> {
+          try {
+              String fromServer;
+              while ((fromServer = in.readLine()) != null) {
+                  if ("END".equals(fromServer)) {
+                      questionArea.append("Quiz finished. Thank you for participating!\n");
+                      break;
+                  } else if ("Correct".equals(fromServer) || "Incorrect".equals(fromServer)) {
+                      questionArea.append("Your answer is " + fromServer + "\n");
+                  } else {
+                      String choices = in.readLine(); // Read choices from server
+                      questionArea.append("Server asks: " + fromServer + "\n");
+                      questionArea.append("Choices: " + choices.replace(",", ", ") + "\n");
+                  }
+              }
+          } catch (IOException ex) {
+              ex.printStackTrace();
+          }
+      }).start();
+  } catch (IOException ex) {
+      ex.printStackTrace();
+  }
+}
  public static void main(String[] args) {
      SwingUtilities.invokeLater(() -> {
     	 QClientGUI client = new QClientGUI();
